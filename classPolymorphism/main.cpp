@@ -5,68 +5,90 @@
 
 using namespace std;
 
-// Абстрактний базовий клас "телефон"
-class Phone {
+class Telefon {
 protected:
-    string name; // назва
-    string brand; // фірма
-    float price; // ціна
+    string name;
+    string brand;
+    double price;
 public:
-    Phone(string n, string b, float p) : name(n), brand(b), price(p) {}
-    virtual ~Phone() {}
-    virtual void print() = 0; // чисто віртуальна функція для виведення інформації про телефон
-    float getPrice() { return price; }
+    Telefon(string n, string b, double p) : name(n), brand(b), price(p) {}
+    virtual void display() = 0;
+    double getPrice() { return price; }
 };
 
-// Похідний клас "мобільний телефон"
-class MobilePhone : public Phone {
+class MobilnyiTelefon : public Telefon {
 private:
-    string color; // колір
-    int memory; // об'єм пам'яті
-public:
-    MobilePhone(string n, string b, float p, string c, int m) : Phone(n, b, p), color(c), memory(m) {}
-    void print() { cout << name << " (" << brand << "), color: " << color << ", memory: " << memory << " GB, price: " << price << " UAH" << endl; }
-};
-
-// Похідний клас "радіотелефон"
-class RadioPhone : public Phone {
-private:
-    float range; // радіус дії
-    bool answeringMachine; // наявність автовідповідача
-public:
-    RadioPhone(string n, string b, float p, float r, bool am) : Phone(n, b, p), range(r), answeringMachine(am) {}
-    void print() { cout << name << " (" << brand << "), range: " << range << " km, answering machine: " << (answeringMachine ? "yes" : "no") << ", price: " << price << " UAH" << endl; }
-    bool hasAnsweringMachine() { return answeringMachine; }
-};
-
-int main() {
-    vector<Phone*> phones;
-
-    // Зчитування даних з першого файлу
-    ifstream fin1("phones1.txt");
-    string name, brand, color;
-    float price;
+    string color;
     int memory;
-    while (fin1 >> name >> brand >> price >> color >> memory) {
-        phones.push_back(new MobilePhone(name, brand, price, color, memory));
+public:
+    MobilnyiTelefon(string n, string b, double p, string c, int m) : Telefon(n, b, p), color(c), memory(m) {}
+    void display() {
+        cout << name << " " << brand << " (color: " << color << ", memory: " << memory << "GB, price: " << price << ")\n";
     }
-    fin1.close();
+};
 
-    // Зчитування даних з другого файлу
-    ifstream fin2("phones2.txt");
-    float range;
-    bool answeringMachine;
-    while (fin2 >> name >> brand >> price >> range >> answeringMachine) {
-        phones.push_back(new RadioPhone(name, brand, price, range, answeringMachine));
+class Radiotelefon : public Telefon {
+private:
+    int range;
+    bool autoAnswer;
+public:
+    Radiotelefon(string n, string b, double p, int r, bool aa) : Telefon(n, b, p), range(r), autoAnswer(aa) {}
+    void display() {
+        cout << name << " " << brand << " (range: " << range << "km, ";
+        if (autoAnswer) {
+            cout << "with auto-answer, ";
+        }
+        else {
+            cout << "without auto-answer, ";
+        }
+        cout << "price: " << price << ")\n";
     }
-    fin2.close();
+    bool hasAutoAnswer() { return autoAnswer; }
+};
 
-    // Сортування телефонів за ціною
-    sort(phones.begin(), phones.end(), [](Phone* a, Phone* b) { return a->getPrice() < b->getPrice(); });
+void readTelefonsFromFile(string filename, vector<Telefon*>& telefons) {
+    ifstream file(filename);
+    string name, brand, color;
+    double price;
+    int memory, range;
+    bool autoAnswer;
 
-    // Виведення інформації про всі телефони з розрахунком загальної суми
-    ofstream fout1("phones_sorted.txt");
-    float sum = 0;
-    return 0;
+    while (file >> name >> brand >> price) {
+        string type;
+        file >> type;
+        if (type == "mobilnyi") {
+            file >> color >> memory;
+            telefons.push_back(new MobilnyiTelefon(name, brand, price, color, memory));
+        }
+        else if (type == "radiotelefon") {
+            file >> range >> autoAnswer;
+            telefons.push_back(new Radiotelefon(name, brand, price, range, autoAnswer));
+        }
+    }
 }
 
+void writeTelefonsToFile(string filename, vector<Telefon*>& telefons) {
+    ofstream file(filename);
+    double totalCost = 0;
+    sort(telefons.begin(), telefons.end(), [](Telefon* a, Telefon* b) {
+        return a->getPrice() < b->getPrice();
+        });
+
+    for (Telefon* telefon : telefons) {
+        telefon->display();
+        totalCost += telefon->getPrice();
+    }
+
+    file << "Total cost: " << totalCost << endl;
+}
+
+int main() {
+    vector<Telefon*> telefons;
+    readTelefonsFromFile("telefons1.txt", telefons);
+    readTelefonsFromFile("telefons2.txt", telefons);
+    vector<Radiotelefon*> autoAnswerTelefons;
+
+    for (Telefon* telefon : telefons) {
+
+    }
+}
